@@ -12,7 +12,7 @@ class Board(object):
         self.height = int(kwargs.get('height', 7)) # n
         self.k_in_row = int(kwargs.get('k_in_row', 5)) # k
 
-        self.players = [1, 2]
+        self.players = [1, -1] # 1 is black, -1 is white
 
         # store board states as a dictionary with key being a move indicating position, and value being the player
         self.states = {}
@@ -48,7 +48,6 @@ class Board(object):
         w = move % self.width
         return [h,w]
     
-
     def loc_to_move(self, location):
         if len(location) != 2:
             return -1
@@ -67,3 +66,74 @@ class Board(object):
         '''
         return current board state, from the perspective of the current player
         '''
+
+        # 4 m*n grids to represent the state.
+        square_state = np.zeros((4,self.width,self.height))
+        if self.states:
+            moves, players = np.array(list(zip(*self.states.items())))
+            move_current = moves[players == self.current_player]
+            move_opponent = moves[players != self.current_player]
+            
+        
+            square_state[0][move_current // self.width, move_current % self.height] = 1.0
+            square_state[1][move_opponent // self.width, move_current % self.height] = 1.0
+            square_state[2][self.last_move // self.width, self.last_move % self.height] = 1.0
+
+        if len(self.states) % 2 == 0:
+            square_state[3][:,:] = 1.0
+        
+        return square_state[:,::-1, :]
+    
+    def do_move(self, move):
+        self.states[move] = self.current_player
+        self.available_moves.remove(move)
+        self.current_player = (self.players[0] if self.current_player == self.players[1] else self.players[1])
+        self.last_move = move
+    
+    
+    def has_winner(self):
+        width = self.width
+        height = self.height
+        states = self.states
+        k = self.k_in_row
+
+        moved_pos = list(set(range(width*height)) - set(self.available_moves))
+
+        if len(moved_pos) < self.k_in_row*2-1:
+            return False, 0
+        
+        for move in moved_pos:
+            h = move // width
+            w = move % width
+            player = states[move]
+            
+            # horizontal win 
+            if (w in range(width - k + 1) and
+                    len(set(states.get(i, 0) for i in range(move, move + k))) == 1):
+                return True, player
+            # vertical win |
+            if (h in range(height - k + 1) and
+                    len(set(states.get(i, 0) for i in range(move, move + k * width, width))) == 1):
+                return True, player
+            # up-right diagonal win / 
+            if (w in range(width - k + 1) and h in range(height - k + 1) and
+                    len(set(states.get(i, 0) for i in range(move, move + k * (width + 1), width + 1))) == 1):
+                return True, player
+            # down-right diagonal win \
+            if (w in range(k - 1, width) and h in range(height - k + 1) and
+                    len(set(states.get(i, 0) for i in range(move, move + k * (width - 1), width - 1))) == 1):
+                return True, player
+            
+            return False, 0
+    
+    def end_game(self):
+        has_win, winner = self.has_winner()
+        if has_win:
+            return True, winner
+        elif not len(self.available_moves):
+            return True, 0
+        else:
+            return False, 0
+    
+    def get_current_player(self):
+        return self.current_player

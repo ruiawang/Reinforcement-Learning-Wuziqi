@@ -106,7 +106,7 @@ class MonteCarloTreeSearch(object):
             as well as a score in [-1,1]
         c_puct: constant that determines level of exploration. higher value means more reliance on priors
         '''
-        self._root = Node(None, 1.0, 2) # Since the starting player is 1
+        self._root = Node(None, 1.0, -1) # Since the starting player is 1 (black)
         self._policy = policy_value_function
         self._c_puct = c_puct
         self._n_playout = n_playout
@@ -115,6 +115,18 @@ class MonteCarloTreeSearch(object):
         '''
         runs a single playout from root to leaf, and getting the value at the leaf, backpropagating it through parents
         '''
+        node = self._root
+        while True:
+            if node.is_leaf():
+                break
+        
+            action, node = node.select(self._c_puct)
+            # TODO: implement game board/state actions
+            state.do_move(action)
+        
+        action_probabilities, leaf_value = self._policy(state)
+
+
     
     def get_move_probabilities(self, state, temperature):
         '''
@@ -122,3 +134,6 @@ class MonteCarloTreeSearch(object):
         state: the current game state
         temperature: (0,1] parameter that controls exploration
         '''
+        for n in range(self._N):
+            copy_state = copy.deepcopy(state)
+            
