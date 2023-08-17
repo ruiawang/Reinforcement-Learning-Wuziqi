@@ -124,16 +124,95 @@ class MonteCarloTreeSearch(object):
             # TODO: implement game board/state actions
             state.do_move(action)
         
+        '''
+        evaluates the leaf using network that also outputs tuple of action probabilities as well as score {-1,1} for current player
+        checks for the end of the game and then returns the leaf value recursively 
+        '''
         action_probabilities, leaf_value = self._policy(state)
+        has_end, winner = state.end_game()
+        if not has_end:
+            node.expand(action_probabilities)
+        else:
+            if winner == 0: # this occurs when the game is a tie
+                leaf_value = 0.0
+            else:
+                leaf_value = (1.0 if winner == state.get_current_player() else -1.0)
+
+        # updates the values and the visit count of the nodes in the traversed path
+        node.recursive_update(-leaf_value)
 
 
-    
-    def get_move_probabilities(self, state, temperature):
+    def get_move_probabilities(self, state, temperature=0.01):
         '''
         runs all playouts and returns the available actions and move probabilities.
         state: the current game state
         temperature: (0,1] parameter that controls exploration
         '''
-        for n in range(self._N):
+        for n in range(self._n_playout):
             copy_state = copy.deepcopy(state)
-            
+            self._playout(copy_state)
+        
+        action_visit = [(action, visit_count) for action, visit_count in self._root._children.items()]
+        actions, visit_counts = zip(*action_visit)
+        action_probs = softmax(1.0/temperature * np.log(np.array(visit_counts) + 1e-10))
+
+        return actions, action_probs
+    
+    def update_move(self, last_move):
+        '''
+        move forward in the tree but maintain other information in subtree
+        '''
+        if last_move in self._root._children:
+            self._root = self._root._children[last_move]
+            self._root._parent = None
+        else:
+            self._root = Node(None, 1.0, -1)
+    
+
+    def __str__(self):
+        return "Monte Carlo Tree Search"
+
+
+class MCTSPlayer(object):
+    '''
+    Implementation of an AI player using Monte Carlo Tree Search
+    '''
+    def __init__(self, policy_value_function, c_puct = 2, n_playout = 1000, self_play = 0):
+        self.mcts = MonteCarloTreeSearch(policy_value_function, c_puct, n_playout)
+        self._self_play = self_play
+    
+    def set_player(self, p):
+        self.player = p
+    
+    def reset_player(self):
+        self.mcts.update_move(-1)
+    
+
+    def get_action(self, board, temperature=0.01, return_probability=0):
+        available_moves = board.available_moves
+        
+        # pi vector from AlphaGo Zero paper
+        move_probabilities = np.zeros(board.width*board.height)
+        if len(available_moves) > 0:
+            actions, probabilities = self.mcts.get_move_probabilities(board, temperature)
+            move_probabilities[list(actions)] = probabilities
+            if self._self_play:
+                # use Dirichlet Noise
+                move = np.random.choice(actions, p=0.75*probabilities + 0.25*np.random.dirichlet(0.3*np.ones(len(probabilities))))
+
+                # update the tree search with the chosen move
+                self.mcts.update_move(move)
+            else:
+                move = np.random.choice(actions, p=probabilities)
+                # reset the MCTS
+                self.mcts.update_move(-1)
+
+            if return_probability:
+                return move, move_probabilities
+            else:
+                return move
+        else:
+            print('Board is full')
+
+    def __str__(self):
+        return 'Monte Carlo Tree Search {}'.format(self.player)
