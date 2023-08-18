@@ -30,14 +30,14 @@ class Board(object):
     
     '''
     We can store a move/location as a single integer rather than a coordinate pair due to the rectangular nature of the board.
-    For example in a 2x4 board:
+    For example in a 4x2 board:
     4 5 6 7
     0 1 2 3
-    or a 2x3 board:
+    or a 3x2 board:
     3 4 5
     0 1 2
     
-    the move 5 represents position (1,1) in a 2x4 board and (1,2) in a 2x3 board
+    the move 5 represents position (1,1) in a 4x2 board and (1,2) in a 3x2 board
     this is more intuitive than the traditional cartesian reading of (horizontal, vertical)
     as you find the right row and then go through it to find the right position
     Any move z is represented by a coordinate by: (z//m, z%m)
@@ -137,3 +137,119 @@ class Board(object):
     
     def get_current_player(self):
         return self.current_player
+
+
+class Game(object):
+    '''
+    Implementing the setup around the game (players, board, displaying)
+    '''
+    def __init__(self, board):
+        self.board = board
+    
+    def draw_board(self, board, player_1, player_2):
+        '''
+        draws the board with player and piece info
+        '''
+        width = board.width
+        height = board.height
+
+        print('Player', player_1, 'with ●'.rjust(3))
+        print('Player', player_2, 'with ○'.rjust(3))
+
+        for x in range(width):
+            print("{0:8}".format(x), end='')
+        print('\r\n')
+        for i in range(height - 1, -1, -1):
+            print("{0:4d}".format(i), end='')
+            
+            for j in range(width):
+                loc = i * width + j
+                p = board.states.get(loc, -1)
+                if p == player_1:
+                    print('●'.center(8), end='')
+                elif p == player_2:
+                    print('○'.center(8), end='')
+                else:
+                    print('_'.center(8), end='')
+            print('\r\n\r\n')
+
+    def play(self, board, player_1, player_2, start_player=0, display=1):
+        if not start_player in (0,1):
+            raise Exception("starting player must be 0 (player_1 starting) or 1 (player_2 starting)")
+        
+        self.board.init_board(start_player)
+        p1, p2 = self.board.players
+        player_1.set_player(p1)
+        player_2.set_player(p2)
+        player_dict = {p1: player_1, p2: player_2}
+
+        if display:
+            self.draw_board(self.board, player_1.player, player_2.player)
+        
+        while True:
+            current_player = self.board.get_current_player()
+            turn_player = player_dict[current_player]
+
+            # make a move
+            move = turn_player.get_action(self.board)
+            self.board.do_move(move)
+
+            # update the display with the new move
+            if display:
+                self.draw_board(self.board, player_1.player, player_2.player)
+
+            # check if game has ended
+            has_end, winner = self.board.end_game()
+            if has_end:
+                if display:
+                    if winner != 0: # some player won
+                        print('The game has ended. The winner is', player_dict[winner])
+                    else: # tie
+                        print('The game has ended. It is a tie.')
+
+                return winner
+    
+    def self_play(self, player, display=0, temperature=0.01):
+        '''
+        starts a self-play using MCTS player and reusing the search tree.
+        stores the data from self-play as a tuple (state, probabilities, winner)
+        '''
+        self.board.init_board()
+        p1, p2 = self.board.players()
+        
+        states, probabilities, current_players = [], [], []
+        
+        while True:
+            # return the move and its probabilities from MCTS
+            move, move_probabilities = player.get_action(self.board, temperature, return_probability=1)
+
+            # append the move data to store
+            states.append(self.board.current_state())
+            probabilities.append(move_probabilities)
+            current_players.append(self.board.current_player)
+
+            # perform the move
+            self.board.do_move(move)
+
+            # update the display with new move
+            if display:
+                self.draw_board(self.board, p1, p2)
+
+            # check if game has ended
+            has_end, winner = self.board.end_game()
+            if has_end:
+                winners = np.zeros(len(current_players))
+                if winner != 0: # some player won
+                    winners[np.array(current_players) == winner] = 1.0
+                    winners[np.array(current_players) != winner] = -1.0
+                
+                # reset the MCTS
+                player.reset_player()
+
+                if display:
+                    if winner != 0: # some player won
+                        print('The game has ended. The winner is player:', winner)
+                    else: # tie
+                        print('The game has ended. It is a tie.')
+                
+                return winner, zip(states, probabilities, winners)
