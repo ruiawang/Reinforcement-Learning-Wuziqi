@@ -173,7 +173,7 @@ class Game(object):
                     print('_'.center(8), end='')
             print('\r\n\r\n')
 
-    def play(self, board, player_1, player_2, start_player=0, display=1):
+    def play(self, player_1, player_2, start_player=0, display=1):
         if not start_player in (0,1):
             raise Exception("starting player must be 0 (player_1 starting) or 1 (player_2 starting)")
         
