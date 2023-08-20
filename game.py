@@ -76,7 +76,7 @@ class Board(object):
             
         
             square_state[0][move_current // self.width, move_current % self.height] = 1.0
-            square_state[1][move_opponent // self.width, move_current % self.height] = 1.0
+            square_state[1][move_opponent // self.width, move_opponent % self.height] = 1.0
             square_state[2][self.last_move // self.width, self.last_move % self.height] = 1.0
 
         if len(self.states) % 2 == 0:
@@ -224,7 +224,7 @@ class Game(object):
             move, move_probabilities = player.get_action(self.board, temperature, return_probability=1)
 
             # append the move data to store
-            states.append(self.board.current_state())
+            states.append(self.board.current_board())
             probabilities.append(move_probabilities)
             current_players.append(self.board.current_player)
 

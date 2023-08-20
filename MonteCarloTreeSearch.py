@@ -82,7 +82,7 @@ class Node(object):
         recursively update nodes, ancestors first
         '''
         if self._parent:
-            self._parent.update_recursive(-leaf_value)
+            self._parent.recursive_update(-leaf_value)
         self.update(leaf_value)
 
     def is_leaf(self):
@@ -132,7 +132,7 @@ class MonteCarloTreeSearch(object):
         action_probabilities, leaf_value = self._policy(state)
         has_end, winner = state.end_game()
         if not has_end:
-            node.expand(action_probabilities)
+            node.expand(action_probabilities, state.current_player)
         else:
             if winner == 0: # this occurs when the game is a tie
                 leaf_value = 0.0
@@ -153,7 +153,7 @@ class MonteCarloTreeSearch(object):
             copy_state = copy.deepcopy(state)
             self._playout(copy_state)
         
-        action_visit = [(action, visit_count) for action, visit_count in self._root._children.items()]
+        action_visit = [(action, node._N) for action, node in self._root._children.items()]
         actions, visit_counts = zip(*action_visit)
         action_probs = softmax(1.0/temperature * np.log(np.array(visit_counts) + 1e-10))
 

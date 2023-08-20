@@ -27,7 +27,7 @@ class Net(nn.Module):
         self.conv_3 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
 
         # policy layers
-        self.policy_conv = nn.Conv2d(64, 2, kernel_size=1)
+        self.policy_conv = nn.Conv2d(64, 4, kernel_size=1)
         self.policy_fc = nn.Linear(4*width*height,width*height)
 
         # value layers
@@ -95,7 +95,7 @@ class PolicyValueNetwork():
         '''
         available_moves = board.available_moves
 
-        current_state = np.ascontiguousarray(board.current_state().reshape(-1, 4, self.width,self.height))
+        current_state = np.ascontiguousarray(board.current_board().reshape(-1, 4, self.width,self.height))
 
         action_probabilities_log, value = self.policy_value_net(Variable(torch.from_numpy(current_state)).float())
         action_probabilities = np.exp(action_probabilities_log.data.numpy().flatten())

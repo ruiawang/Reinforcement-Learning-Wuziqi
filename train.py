@@ -66,7 +66,7 @@ class Training_Pipeline():
                 rotated_state = np.array([np.rot90(s, i) for s in state])
                 rotated_mcts_probs = np.rot90(np.flipud(mcts_probabilities.reshape(self.width, self.height)), i)
                 
-                extended_data.append((rotated_state, np.flipud(rotated_mcts_probs).flatten()), winner)
+                extended_data.append((rotated_state, np.flipud(rotated_mcts_probs).flatten(), winner))
 
                 # 
                 flipped_state = np.array([np.fliplr(s) for s in rotated_state])
@@ -152,9 +152,9 @@ class Training_Pipeline():
         try:
             for i in range(self.game_batch_number):
                 self.collect_self_play(self.play_batch_size)
-                print('batch i:{}, episode_len:{}'.format(i+1, self.play_length))
+                print('batch i:{}, play_length:{}'.format(i+1, self.play_length))
                 
-                if len(self.data_buffer) > self.batch_size:
+                if len(self.buffer) > self.batch_size:
                     loss, entropy = self.update_policy_value_network()
                 
                 # evaluates the model every check_frequency  batches
@@ -166,7 +166,7 @@ class Training_Pipeline():
                     self.policy_value_network.save_model('./current_policy.model')
 
                     if winrate > self.best_win_rate:
-                        print("New best policy!!!!!!!!")
+                        print("NEW BEST POLICY")
                         self.best_win_rate = winrate
                         # update the best_policy
                         self.policy_value_network.save_model('./best_policy.model')
