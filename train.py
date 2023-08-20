@@ -52,11 +52,16 @@ class Training_Pipeline():
 
     def extend_data(self, play_data):
         '''
+        We are using the fact that Wuziqi (in square boards) is invariant to rotation and flipping.
+        This fact was used in the AlphaGo Zero paper since Go is also invariant to rotation/flips.
+
+        This allows us to generate much more self-play data and help the diversity of the data.
+        Generating self-play data is the bottleneck in the computing process, so doing this allows us to speed up the process more.
         for play data which is list of tuples (state, monte carlo tree search prob, winner), extend the dataset by rotating and flipping it
         '''
         extended_data = []
         for state, mcts_probabilities, winner in play_data:
-            for i in range(1,5): # have a rotated state and flipped rotated state that can be 4 times
+            for i in [1,2,3,4]: # have a rotated state and flipped rotated state that can be 4 times
                 rotated_state = np.array([np.rot90(s, i) for s in state])
                 rotated_mcts_probs = np.rot90(np.flipud(mcts_probabilities.reshape(self.width, self.height)), i)
                 
