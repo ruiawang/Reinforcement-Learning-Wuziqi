@@ -1,6 +1,9 @@
 import numpy as np
 import copy
 
+'''
+Implementation of the Monte Carlo Tree Search used in the AlphaGo Zero paper
+'''
 
 def softmax(x):
     '''
@@ -121,9 +124,8 @@ class MonteCarloTreeSearch(object):
                 break
         
             action, node = node.select(self._c_puct)
-            # TODO: implement game board/state actions
             state.do_move(action)
-        
+
         '''
         evaluates the leaf using network that also outputs tuple of action probabilities as well as score {-1,1} for current player
         checks for the end of the game and then returns the leaf value recursively 
@@ -148,7 +150,7 @@ class MonteCarloTreeSearch(object):
         state: the current game state
         temperature: (0,1] parameter that controls exploration
         '''
-        for n in range(self._n_playout):
+        for i in range(self._n_playout):
             copy_state = copy.deepcopy(state)
             self._playout(copy_state)
         
