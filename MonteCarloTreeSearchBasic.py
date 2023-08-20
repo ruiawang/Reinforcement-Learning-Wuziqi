@@ -106,7 +106,7 @@ class MonteCarloTreeSearch(object):
     '''
     Implementation of Monte Carlo Tree Search.
     '''
-    def __init__(self, policy_value_function, c_puct = 2, n_playout = 1000):
+    def __init__(self, policy_value_function, c_puct = 5, n_playout = 1000):
         '''
         policy_value_function: function that takes in a board state and outputs (action, probability) tuples 
             as well as a score in [-1,1]

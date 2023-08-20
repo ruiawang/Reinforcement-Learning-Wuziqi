@@ -28,7 +28,7 @@ class Training_Pipeline():
         self.lr_mult = 1.0 # changing learning rate based on kl, initally at 1
         self.temperature = 1.0
         self.n_playout = 400
-        self.c_puct = 2
+        self.c_puct = 5
 
         self.buffer_size = 10000
         self.batch_size = 512
