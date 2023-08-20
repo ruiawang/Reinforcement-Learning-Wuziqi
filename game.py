@@ -215,7 +215,7 @@ class Game(object):
         stores the data from self-play as a list of tuples (state, probabilities, winner)
         '''
         self.board.init_board()
-        p1, p2 = self.board.players()
+        p1, p2 = self.board.players
         
         states, probabilities, current_players = [], [], []
         

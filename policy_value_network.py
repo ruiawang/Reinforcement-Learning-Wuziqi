@@ -75,8 +75,7 @@ class PolicyValueNetwork():
         # if pre-load model
         if model:
             params = torch.load(model)
-        
-        self.policy_value_net.load_state_dict(params)
+            self.policy_value_net.load_state_dict(params)
     
     def policy_value(self, state_batch):
         '''
