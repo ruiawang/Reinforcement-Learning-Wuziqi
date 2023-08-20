@@ -212,7 +212,7 @@ class Game(object):
     def self_play(self, player, display=0, temperature=0.01):
         '''
         starts a self-play using MCTS player and reusing the search tree.
-        stores the data from self-play as a tuple (state, probabilities, winner)
+        stores the data from self-play as a list of tuples (state, probabilities, winner)
         '''
         self.board.init_board()
         p1, p2 = self.board.players()
