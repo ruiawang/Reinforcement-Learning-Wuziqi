@@ -72,7 +72,7 @@ class Node(object):
         recursively update nodes, ancestors first
         '''
         if self._parent:
-            self._parent.update_recursive(-leaf_value)
+            self._parent.recursive_update(-leaf_value)
         self.update(leaf_value)
 
     def is_leaf(self):
@@ -155,7 +155,7 @@ class MonteCarloTreeSearch(object):
         action_probabilities, _ = self._policy(state)
         has_end, winner = state.end_game()
         if not has_end:
-            node.expand(action_probabilities)
+            node.expand(action_probabilities, state.current_player)
         
         '''
         Key difference between AlphaZero/AlphaGo Zero MCTS and pure MCTS is the simulation step. AlphaGo Zero MCTS simulation step is by
