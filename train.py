@@ -16,6 +16,7 @@ from MonteCarloTreeSearchBasic import MCTSPlayer as Basic_MCTS_Player
 class Training_Pipeline():
     def __init__(self, saved_model=None):
         # Board/Game params
+        # change to alter game
         self.width = 6 # m
         self.height = 6 # n
         self.k_in_row = 4
@@ -24,7 +25,7 @@ class Training_Pipeline():
 
         # training params
         self.lr = 2e-3
-        self.lr_mult = 1.0 # changing learning rate based on kl
+        self.lr_mult = 1.0 # changing learning rate based on kl, initally at 1
         self.temperature = 1.0
         self.n_playout = 400
         self.c_puct = 2
@@ -92,3 +93,92 @@ class Training_Pipeline():
         '''
         update policy value network
         '''
+        small_batch = random.sample(self.buffer, self.batch_size)
+        # small_batch is a (random) sample of a list of tuples (state, mcts_prob, winner)
+        state_batch = [data[0] for data in small_batch]
+        mcts_probability_batch = [data[1] for data in small_batch]
+        winner_batch = [data[2] for data in small_batch]
+
+        prev_act_probs, prev_value = self.policy_value_network.policy_value(state_batch)
+
+        for i in range(self.epochs):
+            # train the policy value neural network
+            loss, entropy = self.policy_value_network.train_step(state_batch, mcts_probability_batch, winner_batch, self.lr*self.lr_mult)
+            # new action probs and value after training the policy value nn
+            new_act_probs, new_value = self.policy_value_network.policy_value(state_batch)
+
+            # kl-divergence between the previous and new probs
+            kl = np.mean(np.sum(prev_act_probs*(np.log(prev_act_probs + 1e-10) - np.log(new_act_probs + 1e-10)), axis=1))
+
+            # stop early if we have diverged a lot
+            if kl > self.kl_target*4:
+                break
+        
+        # change learning rate based on kl
+        if kl > self.kl_target*2 and self.lr_mult > 0.1:
+            self.lr_mult /= 1.5
+        elif kl < self.kl_target/2 and self.lr_mult < 10:
+            self.lr_mult *= 1.5
+        
+        # explained variation
+        explained_var_prev = (1 - np.var(np.array(winner_batch) - prev_value.flatten()) / np.var(np.array(winner_batch)))
+        explained_var_new = (1 - np.var(np.array(winner_batch) - new_value.flatten()) / np.var(np.array(winner_batch)))
+
+        print('kl:{:.5f}, loss:{}, entropy:{}, lr_mult:{:.3f}, explained_var_prev:{:.3f}, explained_var_new:{:.3f}'.format(
+            kl, loss, entropy, self.lr_mult, explained_var_prev, explained_var_new))
+
+        return loss, entropy
+    
+    def evaluate_policy(self, num_games = 10):
+        '''
+        evaluate policy by playing against the basic MCTS player and return win rate
+        '''
+        mcts_player_current = MCTSPlayer(self.policy_value_network.policy_value_function, c_puct=self.c_puct, n_playout=self.n_playout)
+        mcts_player_basic = Basic_MCTS_Player(c_puct=5, n_playout=self.basic_mcts_n_playout)
+
+        win_dict = defaultdict(int)
+        for i in range(num_games):
+            winner = self.Game.play(mcts_player_current, mcts_player_basic, start_player= i % 2, display=0) # alternate who starts
+            win_dict[winner] += 1
+        winrate = 1.0*(win_dict[1] + 0.5*win_dict[0]) / num_games
+
+        print('num_playouts:{}, win: {}, lose: {}, tie:{}'.format(self.basic_mcts_n_playout, win_dict[1], win_dict[-1], win_dict[0]))
+        return winrate
+    
+    def run(self):
+        '''
+        Runs the Training Pipeline
+        '''
+        try:
+            for i in range(self.game_batch_number):
+                self.collect_self_play(self.play_batch_size)
+                print('batch i:{}, episode_len:{}'.format(i+1, self.play_length))
+                
+                if len(self.data_buffer) > self.batch_size:
+                    loss, entropy = self.update_policy_value_network()
+                
+                # evaluates the model every check_frequency  batches
+                if (i+1) % self.check_frequency == 0:
+                    print('current batch:{}'.format(i+1))
+
+                    winrate = self.evaluate_policy()
+
+                    self.policy_value_network.save_model('./current_policy.model')
+
+                    if winrate > self.best_win_rate:
+                        print("New best policy!!!!!!!!")
+                        self.best_win_rate = winrate
+                        # update the best_policy
+                        self.policy_value_network.save_model('./best_policy.model')
+                        if (self.best_win_rate == 1.0 and self.basic_mcts_n_playout < 5000):
+                            # increase the number of playouts basic MCTS gets if only winning
+                            self.basic_mcts_n_playout += 1000
+                            self.best_win_rate = 0.0
+        
+        
+        except KeyboardInterrupt:
+            print('\n\rquit out')
+
+if __name__ == '__main__':
+    training_pipeline = Training_Pipeline()
+    training_pipeline.run()
