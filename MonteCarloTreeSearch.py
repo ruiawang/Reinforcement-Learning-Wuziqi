@@ -1,9 +1,8 @@
-import numpy as np
-import copy
-
 '''
 Implementation of the Monte Carlo Tree Search used in the AlphaGo Zero paper
 '''
+import numpy as np
+import copy
 
 def softmax(x):
     '''

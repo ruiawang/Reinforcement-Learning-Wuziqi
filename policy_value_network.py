@@ -1,3 +1,6 @@
+'''
+Implementation of Policy Value Network in AlphaGo Zero style
+'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
