@@ -49,4 +49,41 @@ class Training_Pipeline():
             self.policy_value_network = PolicyValueNetwork(self.width, self.height, None)
         
         self.MCTS_Player = MCTSPlayer(self.policy_value_network.policy_value_function, self.c_puct, self.n_playout, self_play=1)
+
+    def extend_data(self, play_data):
+        '''
+        for play data which is list of tuples (state, monte carlo tree search prob, winner), extend the dataset by rotating and flipping it
+        '''
+        extended_data = []
+        for state, mcts_probabilities, winner in play_data:
+            for i in range(1,5): # have a rotated state and flipped rotated state that can be 4 times
+                rotated_state = np.array([np.rot90(s, i) for s in state])
+                rotated_mcts_probs = np.rot90(np.flipud(mcts_probabilities.reshape(self.width, self.height)), i)
+                
+                extended_data.append((rotated_state, np.flipud(rotated_mcts_probs).flatten()), winner)
+
+                # 
+                flipped_state = np.array([np.fliplr(s) for s in rotated_state])
+                flipped_mcts_probs = np.fliplr(rotated_mcts_probs)
+
+                extended_data.append((flipped_state, np.flipud(flipped_mcts_probs).flatten(), winner))
         
+        return extended_data
+
+    def collect_self_play(self, num_games=1):
+        '''
+        collect self-play data
+        '''
+        for i in range(num_games):
+            winner, play_data = self.Game.self_play(self.MCTS_Player, temperature=self.temperature)
+            play_data = list(play_data)[:]
+            self.play_length = len(play_data)
+
+            # add self-play and extended play data to buffer
+            extended_play_data = self.extend_data(play_data)
+            self.buffer.extend(extended_play_data)
+    
+    def update_policy_value_network(self):
+        '''
+        update policy value network
+        '''
