@@ -17,9 +17,9 @@ class Node(object):
     - Q: the total value from this node across all visits
     - U: visit-count adjusted prior score/Upper confidence Bound 
     - Children (map where an action is mapped to another Node)
-    - Whose turn it is 
+    - Parent (parent node)
     '''
-    def __init__(self, parent, P, current_player):
+    def __init__(self, parent, P):
         self._parent = parent
         self._P = P
         
@@ -27,18 +27,16 @@ class Node(object):
         self._N = 0
         self._Q = 0
         self._U = 0
-        self._player= current_player
-        self._tree_player = 1
-    
 
-    def expand(self, action_priors, current_player):
+
+    def expand(self, action_priors):
         '''
         expand the tree and create children nodes.
         action_priors: a list of tuples given by (action, prior_probability)
         '''
         for action, prob in action_priors:
             if action not in self._children:
-                self._children[action] = Node(self, prob, current_player)
+                self._children[action] = Node(self, prob)
     
 
     def select(self, c_puct):
@@ -112,12 +110,12 @@ class MonteCarloTreeSearch(object):
             as well as a score in [-1,1]
         c_puct: constant that determines level of exploration. higher value means more reliance on priors
         '''
-        self._root = Node(None, 1.0, -1) # Since the starting player is 1 (black)
+        self._root = Node(None, 1.0)
         self._policy = policy_value_function
         self._c_puct = c_puct
         self._n_playout = n_playout
 
-    def _evaluate_simulation(self, state, sim_limit=500):
+    def _evaluate_simulation(self, state, sim_limit=1000):
         player = state.get_current_player()
 
         for i in range(sim_limit):
@@ -132,7 +130,7 @@ class MonteCarloTreeSearch(object):
             # hit limit
             print('simulation reached move limit')
         
-        if winner == 0:
+        if winner == -1:
             return 0
         return 1 if winner == player else -1
 
@@ -155,7 +153,7 @@ class MonteCarloTreeSearch(object):
         action_probabilities, _ = self._policy(state)
         has_end, winner = state.end_game()
         if not has_end:
-            node.expand(action_probabilities, state.current_player)
+            node.expand(action_probabilities)
         
         '''
         Key difference between AlphaZero/AlphaGo Zero MCTS and pure MCTS is the simulation step. AlphaGo Zero MCTS simulation step is by
@@ -184,13 +182,13 @@ class MonteCarloTreeSearch(object):
             self._root = self._root._children[last_move]
             self._root._parent = None
         else:
-            self._root = Node(None, 1.0, -1)
+            self._root = Node(None, 1.0)
 
     def __str__(self):
         return "Monte Carlo Tree Search"
 
 class MCTSPlayer(object):
-    def __init__(self, c_puct=2, n_playout=1000):
+    def __init__(self, c_puct=5, n_playout=1000):
         self.mcts = MonteCarloTreeSearch(policy_value_function, c_puct, n_playout)
 
     def set_player(self, p):

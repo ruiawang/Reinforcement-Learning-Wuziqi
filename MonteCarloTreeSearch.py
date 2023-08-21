@@ -27,9 +27,9 @@ class Node(object):
     - Q: the total value from this node across all visits
     - U: visit-count adjusted prior score/Upper confidence Bound 
     - Children (map where an action is mapped to another Node)
-    - Whose turn it is 
+    - Parent (parent node)
     '''
-    def __init__(self, parent, P, current_player):
+    def __init__(self, parent, P):
         self._parent = parent
         self._P = P
         
@@ -37,18 +37,16 @@ class Node(object):
         self._N = 0
         self._Q = 0
         self._U = 0
-        self._player= current_player
-        self._tree_player = 1
     
 
-    def expand(self, action_priors, current_player):
+    def expand(self, action_priors):
         '''
         expand the tree and create children nodes.
         action_priors: a list of tuples given by (action, prior_probability)
         '''
         for action, prob in action_priors:
             if action not in self._children:
-                self._children[action] = Node(self, prob, current_player)
+                self._children[action] = Node(self, prob)
     
 
     def select(self, c_puct):
@@ -102,13 +100,13 @@ class MonteCarloTreeSearch(object):
     '''
     Implementation of Monte Carlo Tree Search.
     '''
-    def __init__(self, policy_value_function, c_puct = 2, n_playout = 1000):
+    def __init__(self, policy_value_function, c_puct = 5, n_playout = 400):
         '''
         policy_value_function: function that takes in a board state and outputs (action, probability) tuples 
             as well as a score in [-1,1]
         c_puct: constant that determines level of exploration. higher value means more reliance on priors
         '''
-        self._root = Node(None, 1.0, -1) # Since the starting player is 1 (black)
+        self._root = Node(None, 1.0)
         self._policy = policy_value_function
         self._c_puct = c_puct
         self._n_playout = n_playout
@@ -132,9 +130,9 @@ class MonteCarloTreeSearch(object):
         action_probabilities, leaf_value = self._policy(state)
         has_end, winner = state.end_game()
         if not has_end:
-            node.expand(action_probabilities, state.current_player)
+            node.expand(action_probabilities)
         else:
-            if winner == 0: # this occurs when the game is a tie
+            if winner == -1: # when the game is a tie
                 leaf_value = 0.0
             else:
                 leaf_value = (1.0 if winner == state.get_current_player() else -1.0)
@@ -143,7 +141,7 @@ class MonteCarloTreeSearch(object):
         node.recursive_update(-leaf_value)
 
 
-    def get_move_probabilities(self, state, temperature=0.01):
+    def get_move_probabilities(self, state, temperature=1e-3):
         '''
         runs all playouts and returns the available actions and move probabilities.
         state: the current game state
@@ -167,7 +165,7 @@ class MonteCarloTreeSearch(object):
             self._root = self._root._children[last_move]
             self._root._parent = None
         else:
-            self._root = Node(None, 1.0, -1)
+            self._root = Node(None, 1.0)
     
 
     def __str__(self):
@@ -178,7 +176,7 @@ class MCTSPlayer(object):
     '''
     Implementation of an AI player using Monte Carlo Tree Search
     '''
-    def __init__(self, policy_value_function, c_puct = 2, n_playout = 1000, self_play = 0):
+    def __init__(self, policy_value_function, c_puct = 5, n_playout = 4000, self_play = 0):
         self.mcts = MonteCarloTreeSearch(policy_value_function, c_puct, n_playout)
         self._self_play = self_play
     
@@ -189,10 +187,10 @@ class MCTSPlayer(object):
         self.mcts.update_move(-1)
     
 
-    def get_action(self, board, temperature=0.01, return_probability=0):
+    def get_action(self, board, temperature=1e-3, return_probability=0):
         available_moves = board.available_moves
         
-        # pi vector from AlphaGo Zero paper
+        # pi from AlphaGo Zero paper
         move_probabilities = np.zeros(board.width*board.height)
         if len(available_moves) > 0:
             actions, probabilities = self.mcts.get_move_probabilities(board, temperature)
