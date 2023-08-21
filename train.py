@@ -3,8 +3,10 @@ Implementation of AlphaGo Zero training pipeline
 '''
 
 from __future__ import print_function
+
 import numpy as np
 import random
+
 from collections import defaultdict, deque
 
 from game import Board, Game
@@ -19,7 +21,7 @@ class Training_Pipeline():
         # change to alter game
         self.width = 6 # m
         self.height = 6 # n
-        self.k_in_row = 4
+        self.k_in_row = 4 # k
         self.Board = Board(width=self.width, height=self.height, k_in_row=self.k_in_row)
         self.Game = Game(self.Board)
 
@@ -68,7 +70,7 @@ class Training_Pipeline():
                 
                 extended_data.append((rotated_state, np.flipud(rotated_mcts_probs).flatten(), winner))
 
-                # 
+                # flip the state across mirror
                 flipped_state = np.array([np.fliplr(s) for s in rotated_state])
                 flipped_mcts_probs = np.fliplr(rotated_mcts_probs)
 
@@ -140,9 +142,9 @@ class Training_Pipeline():
         for i in range(num_games):
             winner = self.Game.play(mcts_player_current, mcts_player_basic, start_player= i % 2, display=0) # alternate who starts
             win_dict[winner] += 1
-        winrate = 1.0*(win_dict[1] + 0.5*win_dict[0]) / num_games
+        winrate = 1.0*(win_dict[1] + 0.5*win_dict[-1]) / num_games
 
-        print('num_playouts:{}, win: {}, lose: {}, tie:{}'.format(self.basic_mcts_n_playout, win_dict[1], win_dict[-1], win_dict[0]))
+        print('num_playouts:{}, win: {}, lose: {}, tie:{}'.format(self.basic_mcts_n_playout, win_dict[1], win_dict[2], win_dict[-1]))
         return winrate
     
     def run(self):
@@ -174,8 +176,6 @@ class Training_Pipeline():
                             # increase the number of playouts basic MCTS gets if only winning
                             self.basic_mcts_n_playout += 1000
                             self.best_win_rate = 0.0
-        
-        
         except KeyboardInterrupt:
             print('\n\rquit out')
 
