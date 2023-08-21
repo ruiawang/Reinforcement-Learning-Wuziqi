@@ -12,7 +12,7 @@ class Board(object):
         self.height = int(kwargs.get('height', 7)) # n
         self.k_in_row = int(kwargs.get('k_in_row', 5)) # k
 
-        self.players = [1, -1] # 1 is black, -1 is white
+        self.players = [1, 2] # 1 is black, 2 is white
 
         # store board states as a dictionary with key being a move indicating position, and value being the player
         self.states = {}
@@ -100,40 +100,40 @@ class Board(object):
         moved_pos = list(set(range(width*height)) - set(self.available_moves))
 
         if len(moved_pos) < self.k_in_row*2-1:
-            return False, 0
+            return False, -1
         
-        for move in moved_pos:
-            h = move // width
-            w = move % width
-            player = states[move]
+        for m in moved_pos:
+            h = m // width
+            w = m % width
+            player = states[m]
             
             # horizontal win 
             if (w in range(width - k + 1) and
-                    len(set(states.get(i, 0) for i in range(move, move + k))) == 1):
+                    len(set(states.get(i, -1) for i in range(m, m + k))) == 1):
                 return True, player
             # vertical win |
             if (h in range(height - k + 1) and
-                    len(set(states.get(i, 0) for i in range(move, move + k * width, width))) == 1):
+                    len(set(states.get(i, -1) for i in range(m, m + k * width, width))) == 1):
                 return True, player
             # up-right diagonal win / 
             if (w in range(width - k + 1) and h in range(height - k + 1) and
-                    len(set(states.get(i, 0) for i in range(move, move + k * (width + 1), width + 1))) == 1):
+                    len(set(states.get(i, -1) for i in range(m, m + k * (width + 1), width + 1))) == 1):
                 return True, player
             # down-right diagonal win \
             if (w in range(k - 1, width) and h in range(height - k + 1) and
-                    len(set(states.get(i, 0) for i in range(move, move + k * (width - 1), width - 1))) == 1):
+                    len(set(states.get(i, -1) for i in range(m, m + k * (width - 1), width - 1))) == 1):
                 return True, player
             
-            return False, 0
+            return False, -1
     
     def end_game(self):
         has_win, winner = self.has_winner()
         if has_win:
             return True, winner
         elif not len(self.available_moves):
-            return True, 0
+            return True, -1
         else:
-            return False, 0
+            return False, -1
     
     def get_current_player(self):
         return self.current_player
@@ -247,7 +247,7 @@ class Game(object):
                 player.reset_player()
 
                 if display:
-                    if winner != 0: # some player won
+                    if winner != -1: # some player won
                         print('The game has ended. The winner is player:', winner)
                     else: # tie
                         print('The game has ended. It is a tie.')
