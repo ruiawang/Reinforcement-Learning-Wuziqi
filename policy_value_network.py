@@ -7,7 +7,7 @@ import numpy as np
 import pickle
 
 from tensorflow import keras
-from keras import Model, Sequential, Input
+from keras import Model, Input
 from keras.layers import Conv2D, Activation, Dense, Flatten, Add, BatchNormalization
 from keras.regularizers import L2
 from keras.optimizers import Adam
