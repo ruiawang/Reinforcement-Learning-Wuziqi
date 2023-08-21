@@ -6,6 +6,7 @@ from __future__ import print_function
 import numpy as np
 import pickle
 
+import tensorflow as tf
 from tensorflow import keras
 from keras import Model, Input
 from keras.layers import Conv2D, Activation, Dense, Flatten, Add, BatchNormalization
@@ -26,24 +27,24 @@ class PolicyValueNetwork():
         self._loss_train_operation()
 
         if model:
-            params = pickle.load(open(model, 'rb'))
+            params = pickle.load(open(file=model, mode='rb'))
             self.model.set_weights(params)
     
     def create_network(self):
         input_x = network = Input((4, self.width, self.height))
 
         # convolution layers
-        network = Conv2D(filters=16, kernel_size=(3,3), padding='same', data_format='channels_first', activation='relu',kernel_regularizer=L2(self.L2))(network)
-        network = Conv2D(filters=32, kernel_size=(3,3), padding='same', data_format='channels_first', activation='relu',kernel_regularizer=L2(self.L2))(network)
-        network = Conv2D(filters=64, kernel_size=(3,3), padding='same', data_format='channels_first', activation='relu',kernel_regularizer=L2(self.L2))(network)
+        network = Conv2D(filters=16, kernel_size=(3,3), padding='same', data_format='channels_last', activation='relu',kernel_regularizer=L2(self.L2))(network)
+        network = Conv2D(filters=32, kernel_size=(3,3), padding='same', data_format='channels_last', activation='relu',kernel_regularizer=L2(self.L2))(network)
+        network = Conv2D(filters=64, kernel_size=(3,3), padding='same', data_format='channels_last', activation='relu',kernel_regularizer=L2(self.L2))(network)
 
         # policy head
-        policy_network = Conv2D(filters=4, kernel_size=(1,1), data_format='channels_first', activation='relu', kernel_regularizer=L2(self.L2))(network)
+        policy_network = Conv2D(filters=4, kernel_size=(1,1), data_format='channels_last', activation='relu', kernel_regularizer=L2(self.L2))(network)
         policy_network = Flatten()(policy_network)
         self.policy_network = Dense(self.width*self.height, activation='softmax', kernel_regularizer=L2(self.L2))(policy_network)
 
         # value head
-        value_network = Conv2D(filters=2, kernel_size=(1,1), data_format='channels_first', activation='relu', kernel_regularizer=L2(self.L2))(network)
+        value_network = Conv2D(filters=2, kernel_size=(1,1), data_format='channels_last', activation='relu', kernel_regularizer=L2(self.L2))(network)
         value_network = Flatten()(value_network)
         value_network = Dense(64, kernel_regularizer=L2(self.L2))(value_network)
         self.value_network = Dense(1, activation='tanh', kernel_regularizer=L2(self.L2))(value_network)
@@ -64,7 +65,7 @@ class PolicyValueNetwork():
         '''
         available_moves = board.available_moves
         current_board = board.current_board()
-        action_probabilities, value = self.policy_value(current_board.rehshape(-1, 4, self.width,self.height))
+        action_probabilities, value = self.policy_value(current_board.reshape(-1, 4, self.width,self.height))
         action_probabilities = zip(available_moves, action_probabilities.flatten()[available_moves])
 
         return action_probabilities, value[0][0]
