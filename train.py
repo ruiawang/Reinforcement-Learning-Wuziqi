@@ -39,8 +39,8 @@ class Training_Pipeline():
         
         self.epochs = 5 # how many training steps for each update
         self.kl_target = 0.02
-        self.check_frequency = 50
-        self.game_batch_number = 1500
+        self.check_frequency = 25
+        self.game_batch_number = 750
         self.best_win_rate = 0.0
 
         # how many playouts for the basic mcts player (opponent)
