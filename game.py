@@ -124,7 +124,7 @@ class Board(object):
                     len(set(states.get(i, -1) for i in range(m, m + k * (width - 1), width - 1))) == 1):
                 return True, player
             
-            return False, -1
+        return False, -1
     
     def end_game(self):
         has_win, winner = self.has_winner()
@@ -132,9 +132,10 @@ class Board(object):
             return True, winner
         elif not len(self.available_moves):
             return True, -1
-        else:
-            return False, -1
-    
+        
+        return False, -1
+
+
     def get_current_player(self):
         return self.current_player
 
