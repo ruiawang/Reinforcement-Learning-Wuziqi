@@ -37,9 +37,9 @@ class Human(object):
 
 
 def run():
-    n = 4
-    width, height = 6, 6
-    model_file = 'best_policy_colab.model'
+    n = 5
+    width, height = 7, 7
+    model_file = 'best_policy.model'
     try:
         board = Board(width=width, height=height, k_in_row=n)
         game = Game(board)

@@ -19,9 +19,9 @@ class Training_Pipeline():
     def __init__(self, saved_model=None):
         # Board/Game params
         # change to alter game
-        self.width = 6 # m
-        self.height = 6 # n
-        self.k_in_row = 4 # k
+        self.width = 7 # m
+        self.height = 7 # n
+        self.k_in_row = 5 # k
         self.Board = Board(width=self.width, height=self.height, k_in_row=self.k_in_row)
         self.Game = Game(self.Board)
 
