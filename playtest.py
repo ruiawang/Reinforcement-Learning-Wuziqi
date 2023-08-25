@@ -1,11 +1,13 @@
+'''
+Playtest the models as a human
+'''
+
 from __future__ import print_function
 
-import pickle
 from game import Board, Game
 from MonteCarloTreeSearchBasic import MCTSPlayer as MCTS_Pure
 from MonteCarloTreeSearch import MCTSPlayer
 from policy_value_network import PolicyValueNetwork
-
 
 
 class Human(object):
