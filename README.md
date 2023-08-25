@@ -1,5 +1,5 @@
 # AlphaZero-Wuziqi
-Implementation of AlphaZero Reinforcement Learning to play Wuziqi (Gomoku)
+Reinforcement Learning agent implementation of AlphaZero and AlphaGo Zero to play variations of Wuziqi (Gomoku).
 
 Results:
 6,6,4 model managed to beat pure MCTS:
