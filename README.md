@@ -7,7 +7,7 @@ Based on the papers:
 [Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm](https://arxiv.org/pdf/1712.01815.pdf)
 
 ### Game basics:
-Wuziqi (五子棋) is a board game (typically) played on a $15$ by $15$ board where the aim is to connect 5 of your stones in a row. It's other names are Gomoku/Gobang in other languages.
+Wuziqi (五子棋) is a board game (typically) played on a $15$ by $15$ board where the aim is to connect 5 of your stones in a row. Its other names are Gomoku/Gobang in other languages.
 
 This game, like tic-tac-toe, is an example of an [m,n,k-game](https://en.wikipedia.org/wiki/M,n,k-game). Tic-tac-toe for example, is 3,3,3, while traditional Wuziqi is 15,15,5.
 
