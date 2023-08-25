@@ -3,6 +3,7 @@ Reinforcement Learning agent implementation of AlphaZero and AlphaGo Zero to pla
 
 Based on the papers:
 [Mastering the game of Go Without human knowledge](https://www.nature.com/articles/nature24270/)
+
 [Mastering Chess and Shogi by Self-Play with a General Reinforcement Learning Algorithm](https://arxiv.org/pdf/1712.01815.pdf)
 
 ### Game basics:
@@ -34,9 +35,10 @@ Siziqi model managed to beat basic MCTS 10-0:
 
 
 ### Files:
-- **game.py**: This is an implementation of the rules and board for general $m$,$n$,$k$-games.
+- Siziqi models: folder contains the models used when training to play Siziqi (6,6,4-game).
 - **MonteCarloTreeSearch.py**: Implementation of the Monte Carlo Tree Search agent/player applied to the games used in the Alpha(Go) Zero papers
 - **MonteCarloTreeSearchBasic.py**: A basic implementation of Monte Carlo Tree Search to serve as the opponent to the RL agent.
+- **game.py**: Implementation of the rules and board for general m,n,k-games.
 - **playtest.py**: Playtest the trained models at the game.
 - **policy_value_network.py**: Implementation of the neural network used by the RL agent.
 - **train.py**: Implementation of the training pipeline for the agent.
