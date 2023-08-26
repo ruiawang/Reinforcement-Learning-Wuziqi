@@ -32,9 +32,12 @@ Siziqi model managed to beat basic MCTS 10-0:
 - with 2000 playouts by 650 plays.
 - with 3000 playouts by 750 plays.
 
+Wuziqi model managed to beat basic MCTS:
+- with 1000 playouts with 8-2 record by 400 plays.
 
 ### Files:
 - *Siziqi models*: Folder that contains the models trained to play Siziqi (6,6,4-game).
+- *Wuziqi models*: Folder that contains the models trained to play Wuziqi (7,7,5-game).
 - **MonteCarloTreeSearch.py**: Implementation of the Monte Carlo Tree Search agent/player applied to the games used in the Alpha(Go) Zero papers
 - **MonteCarloTreeSearchBasic.py**: A basic implementation of Monte Carlo Tree Search to serve as the opponent to the RL agent.
 - **game.py**: Implementation of the rules and board for general m,n,k-games.
