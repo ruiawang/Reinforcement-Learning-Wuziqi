@@ -1,4 +1,4 @@
-# AlphaZero-Wuziqi
+# Reinforcement-Learning-Wuziqi
 Reinforcement Learning agent implementation of AlphaZero and AlphaGo Zero to play variations of Wuziqi (Gomoku).
 
 Based on the papers:
