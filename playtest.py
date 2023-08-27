@@ -12,7 +12,7 @@ from policy_value_network import PolicyValueNetwork
 
 class Human(object):
     """
-    blank human player
+    human player
     """
 
     def __init__(self):
@@ -23,10 +23,10 @@ class Human(object):
 
     def get_action(self, board):
         try:
-            location = input("Your move: ")
-            if isinstance(location, str):
-                location = [int(n, 10) for n in location.split(",")]
-            move = board.loc_to_move(location)
+            loc = input("Your move: ")
+            if isinstance(loc, str):
+                loc = [int(n, 10) for n in loc.split(",")]
+            move = board.loc_to_move(loc)
         except Exception as e:
             move = -1
         if move == -1 or move not in board.available_moves:
@@ -39,11 +39,11 @@ class Human(object):
 
 
 def run():
-    n = 5
+    k = 5
     width, height = 7, 7
     model_file = 'best_policy.model'
     try:
-        board = Board(width=width, height=height, k_in_row=n)
+        board = Board(width=width, height=height, k_in_row=k)
         game = Game(board)
 
         best_policy = PolicyValueNetwork(width, height, model= model_file)
